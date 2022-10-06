@@ -471,7 +471,7 @@ bool MCTPBridge::getRoutingTableCtrlCmd(
         return false;
     }
 
-    phosphor::logging::log<phosphor::logging::level::DEBUG>(
+    phosphor::logging::log<phosphor::logging::level::INFO>(
         "Get Routing Table Entry success");
     return true;
 }

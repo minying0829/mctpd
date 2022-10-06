@@ -59,7 +59,7 @@ PCIeBinding::PCIeBinding(std::shared_ptr<sdbusplus::asio::connection> conn,
 
 void PCIeBinding::endpointDiscoveryFlow()
 {
-    struct mctp_astpcie_pkt_private pktPrv;
+    struct mctp_nupcie_pkt_private pktPrv;
     pktPrv.routing = PCIE_ROUTE_TO_RC;
     pktPrv.remote_id = bdf;
     uint8_t* pktPrvPtr = reinterpret_cast<uint8_t*>(&pktPrv);
@@ -252,12 +252,12 @@ void PCIeBinding::processBridgeEntries(
         if (!isEntryBridge(*entry) || isBridgeCalled(*entry, calledBridges))
             continue;
 
-        mctp_astpcie_pkt_private pktPrv;
+        mctp_nupcie_pkt_private pktPrv;
         pktPrv.routing = PCIE_ROUTE_BY_ID;
         pktPrv.remote_id = std::get<1>(*entry);
         uint8_t* pktPrvPtr = reinterpret_cast<uint8_t*>(&pktPrv);
         std::vector<uint8_t> prvData = std::vector<uint8_t>(
-            pktPrvPtr, pktPrvPtr + sizeof(mctp_astpcie_pkt_private));
+            pktPrvPtr, pktPrvPtr + sizeof(mctp_nupcie_pkt_private));
 
         long entryIndex = std::distance(rt.begin(), entry);
         readRoutingTable(rtCopy, calledBridges, prvData, yield,
@@ -268,7 +268,7 @@ void PCIeBinding::processBridgeEntries(
 
 void PCIeBinding::updateRoutingTable()
 {
-    struct mctp_astpcie_pkt_private pktPrv;
+    struct mctp_nupcie_pkt_private pktPrv;
     getRoutingTableTimer.expires_from_now(getRoutingInterval);
     getRoutingTableTimer.async_wait(
         std::bind(&PCIeBinding::updateRoutingTable, this));
@@ -283,7 +283,7 @@ void PCIeBinding::updateRoutingTable()
     pktPrv.remote_id = busOwnerBdf;
     uint8_t* pktPrvPtr = reinterpret_cast<uint8_t*>(&pktPrv);
     std::vector<uint8_t> prvData = std::vector<uint8_t>(
-        pktPrvPtr, pktPrvPtr + sizeof(mctp_astpcie_pkt_private));
+        pktPrvPtr, pktPrvPtr + sizeof(mctp_nupcie_pkt_private));
 
     boost::asio::spawn(io, [prvData, this](boost::asio::yield_context yield) {
         std::vector<routingTableEntry_t> routingTableTmp;
@@ -299,11 +299,12 @@ void PCIeBinding::updateRoutingTable()
 
         if (routingTableTmp != routingTable)
         {
-            if (!setDriverEndpointMap(routingTableTmp))
-            {
-                phosphor::logging::log<phosphor::logging::level::ERR>(
-                    "Failed to store routing table in KMD");
-            }
+	    //nu todo
+            //if (!setDriverEndpointMap(routingTableTmp))
+            //{
+            //    phosphor::logging::log<phosphor::logging::level::ERR>(
+            //        "Failed to store routing table in KMD");
+            //}
 
             processRoutingTableChanges(routingTableTmp, yield, prvData);
             routingTable = routingTableTmp;
@@ -314,7 +315,7 @@ void PCIeBinding::updateRoutingTable()
 void PCIeBinding::populateDeviceProperties(
     const mctp_eid_t eid, const std::vector<uint8_t>& bindingPrivate)
 {
-    auto pcieBindingPvt = reinterpret_cast<const mctp_astpcie_pkt_private*>(
+    auto pcieBindingPvt = reinterpret_cast<const mctp_nupcie_pkt_private*>(
         bindingPrivate.data());
 
     std::string mctpEpObj =
@@ -342,6 +343,9 @@ void PCIeBinding::processRoutingTableChanges(
     const std::vector<routingTableEntry_t>& newTable,
     boost::asio::yield_context& yield, const std::vector<uint8_t>& prvData)
 {
+    struct mctp_nupcie_pkt_private pktPrv;
+    memcpy(&pktPrv, prvData.data(), sizeof(pktPrv));
+
     /* find removed endpoints, in case entry is not present
      * in the newly read routing table remove dbus interface
      * for this device
@@ -372,8 +376,8 @@ void PCIeBinding::processRoutingTableChanges(
             }
 
             std::vector<uint8_t> prvDataCopy = prvData;
-            mctp_astpcie_pkt_private* pciePrivate =
-                reinterpret_cast<mctp_astpcie_pkt_private*>(prvDataCopy.data());
+            mctp_nupcie_pkt_private* pciePrivate =
+                reinterpret_cast<mctp_nupcie_pkt_private*>(prvDataCopy.data());
             pciePrivate->remote_id = std::get<1>(routingEntry);
             registerEndpoint(yield, prvDataCopy, remoteEid,
                              getBindingMode(routingEntry));
@@ -399,7 +403,8 @@ void PCIeBinding::processRoutingTableChanges(
         }
     }
 }
-
+//nu todo
+#if 0
 bool PCIeBinding::setDriverEndpointMap(
     const std::vector<routingTableEntry_t>& newTable)
 {
@@ -412,11 +417,11 @@ bool PCIeBinding::setDriverEndpointMap(
 
     return hw->setEndpointMap(endpoints);
 }
-
+#endif
 bool PCIeBinding::isReceivedPrivateDataCorrect(const void* bindingPrivate)
 {
     auto pciePrivate =
-        reinterpret_cast<const mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<const mctp_nupcie_pkt_private*>(bindingPrivate);
     if (pciePrivate == nullptr || pciePrivate->remote_id == 0x00)
     {
         return false;
@@ -433,7 +438,7 @@ bool PCIeBinding::handlePrepareForEndpointDiscovery(
         return false;
     }
     auto pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (pciePrivate->routing != PCIE_BROADCAST_FROM_RC)
     {
         phosphor::logging::log<phosphor::logging::level::INFO>(
@@ -459,8 +464,8 @@ bool PCIeBinding::handleEndpointDiscovery(mctp_eid_t, void* bindingPrivate,
     {
         return false;
     }
-    mctp_astpcie_pkt_private* pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+    mctp_nupcie_pkt_private* pciePrivate =
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (pciePrivate->routing != PCIE_BROADCAST_FROM_RC)
     {
         phosphor::logging::log<phosphor::logging::level::INFO>(
@@ -482,7 +487,7 @@ bool PCIeBinding::handleGetEndpointId(mctp_eid_t destEid, void* bindingPrivate,
                                       std::vector<uint8_t>& response)
 {
     auto pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (!MctpBinding::handleGetEndpointId(destEid, bindingPrivate, request,
                                           response))
     {
@@ -498,7 +503,7 @@ bool PCIeBinding::handleSetEndpointId(mctp_eid_t destEid, void* bindingPrivate,
                                       std::vector<uint8_t>& response)
 {
     auto pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (pciePrivate->remote_id != busOwnerBdf)
     {
         phosphor::logging::log<phosphor::logging::level::INFO>(
@@ -528,7 +533,7 @@ bool PCIeBinding::handleGetVersionSupport(mctp_eid_t destEid,
                                           std::vector<uint8_t>& response)
 {
     auto pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (!MctpBinding::handleGetVersionSupport(destEid, bindingPrivate, request,
                                               response))
     {
@@ -545,7 +550,7 @@ bool PCIeBinding::handleGetMsgTypeSupport(mctp_eid_t destEid,
                                           std::vector<uint8_t>& response)
 {
     auto pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
     if (!MctpBinding::handleGetMsgTypeSupport(destEid, bindingPrivate, request,
                                               response))
     {
@@ -575,9 +580,9 @@ bool PCIeBinding::handleGetVdmSupport(mctp_eid_t destEid, void* bindingPrivate,
         return false;
     }
 
-    mctp_astpcie_pkt_private* pciePrivate =
-        reinterpret_cast<mctp_astpcie_pkt_private*>(bindingPrivate);
-    pciePrivate->routing = PCIE_ROUTE_BY_ID;
+    mctp_nupcie_pkt_private* pciePrivate =
+        reinterpret_cast<mctp_nupcie_pkt_private*>(bindingPrivate);
+    pciePrivate->routing = PCIE_ROUTE_TO_RC;
 
     /* Cast to full binding specific response. */
     mctp_pci_ctrl_resp_get_vdm_support* resp =
@@ -628,6 +633,7 @@ void PCIeBinding::initializeBinding()
         throw std::system_error(
             std::make_error_code(static_cast<std::errc>(-status)));
     }
+    //nu todo
     if (hw->registerAsDefault() == false)
     {
         phosphor::logging::log<phosphor::logging::level::ERR>(
@@ -655,6 +661,7 @@ void PCIeBinding::initializeBinding()
     {
         endpointDiscoveryFlow();
     }
+#if 0
 
     if (hw->getBdf(bdf))
     {
@@ -673,12 +680,14 @@ void PCIeBinding::initializeBinding()
         phosphor::logging::log<phosphor::logging::level::ERR>(
             "Incorrect medium id, BindingMediumID property not updated");
     }
+#endif
 
     hwMonitor->observe(weak_from_this());
 }
 
 void PCIeBinding::deviceReadyNotify(bool ready)
 {
+#if 0
     if (ready)
     {
         if (!hw->getBdf(bdf))
@@ -688,19 +697,27 @@ void PCIeBinding::deviceReadyNotify(bool ready)
     }
     else
     {
+#endif
+	//pass build check
+	if(ready)
+	{
+	   bdf = 0;
+	}
         bdf = 0;
         if (bindingModeType != mctp_server::BindingModeTypes::BusOwner)
         {
             changeDiscoveredFlag(pcie_binding::DiscoveryFlags::Undiscovered);
         }
+#if 0
     }
+#endif
     pcieInterface->set_property("BDF", bdf);
 }
 
 std::optional<std::vector<uint8_t>>
     PCIeBinding::getBindingPrivateData(uint8_t dstEid)
 {
-    mctp_astpcie_pkt_private pktPrv = {};
+    mctp_nupcie_pkt_private pktPrv = {};
 
     pktPrv.routing = PCIE_ROUTE_BY_ID;
     auto it = find_if(routingTable.begin(), routingTable.end(),

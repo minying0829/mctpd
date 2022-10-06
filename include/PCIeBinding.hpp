@@ -4,7 +4,7 @@
 #include "hw/DeviceMonitor.hpp"
 #include "hw/PCIeDriver.hpp"
 
-#include <libmctp-astpcie.h>
+#include <libmctp-nupcie.h>
 #include <libmctp-cmds.h>
 
 #include <boost/asio/deadline_timer.hpp>

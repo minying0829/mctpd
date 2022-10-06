@@ -1,8 +1,8 @@
 #include "MCTPBinding.hpp"
 #include "PCIeBinding.hpp"
 #include "SMBusBinding.hpp"
-#include "hw/aspeed/PCIeDriver.hpp"
-#include "hw/aspeed/PCIeMonitor.hpp"
+#include "hw/nuvoton/PCIeDriver.hpp"
+#include "hw/nuvoton/PCIeMonitor.hpp"
 
 #include <CLI/CLI.hpp>
 #include <boost/asio/signal_set.hpp>
@@ -29,8 +29,8 @@ std::shared_ptr<MctpBinding>
     {
         return std::make_shared<PCIeBinding>(
             conn, objectServer, mctpBaseObj, *pcieConfig, ioc,
-            std::make_unique<hw::aspeed::PCIeDriver>(ioc),
-            std::make_unique<hw::aspeed::PCIeMonitor>(ioc));
+            std::make_unique<hw::nuvoton::PCIeDriver>(ioc),
+            std::make_unique<hw::nuvoton::PCIeMonitor>(ioc));
     }
 
     return nullptr;

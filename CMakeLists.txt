@@ -6,7 +6,7 @@ project(mctpd CXX)
 option(BUILD_STANDALONE "Use outside of YOCTO depedencies system" OFF)
 
 set(BUILD_SHARED_LIBRARIES OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-DMCTP_ASTPCIE_RESPONSE_WA)
@@ -24,7 +24,6 @@ set(CMAKE_CXX_FLAGS
     -Woverloaded-virtual \
     -Wpedantic \
     -Wconversion \
-    -Wnull-dereference \
     -Wdouble-promotion \
     -Wformat=2 \
 ")
@@ -62,6 +61,8 @@ set(SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/hw/PCIeDriver.cpp
     ${PROJECT_SOURCE_DIR}/src/hw/aspeed/PCIeMonitor.cpp
     ${PROJECT_SOURCE_DIR}/src/hw/aspeed/PCIeDriver.cpp
+    ${PROJECT_SOURCE_DIR}/src/hw/nuvoton/PCIeMonitor.cpp
+    ${PROJECT_SOURCE_DIR}/src/hw/nuvoton/PCIeDriver.cpp
     ${PROJECT_SOURCE_DIR}/src/utils/Configuration.cpp
     ${PROJECT_SOURCE_DIR}/src/utils/device_watcher.cpp
     ${PROJECT_SOURCE_DIR}/src/utils/transmission_queue.cpp

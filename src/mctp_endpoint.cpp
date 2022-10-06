@@ -322,7 +322,7 @@ bool MCTPEndpoint::discoveryNotifyCtrlCmd(
         return false;
     }
 
-    phosphor::logging::log<phosphor::logging::level::DEBUG>(
+    phosphor::logging::log<phosphor::logging::level::INFO>(
         "Discovery Notify success");
     return true;
 }

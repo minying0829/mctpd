@@ -60,7 +60,7 @@ class PCIeDiscoveredTestBase : public PCIeTestBase, public MessageHelpers
         binding->backdoor.onOutgoingCtrlCommand(
             MCTP_CTRL_CMD_DISCOVERY_NOTIFY, [&]() {
                 sendCtrlResponseAsync<mctp_ctrl_resp_discovery_notify>(
-                    mctp_astpcie_pkt_private{PCIE_ROUTE_TO_RC, 0},
+                    mctp_nupcie_pkt_private{PCIE_ROUTE_TO_RC, 0},
                     [](auto& payload) {
                         payload.completion_code = MCTP_CTRL_CC_SUCCESS;
                     });

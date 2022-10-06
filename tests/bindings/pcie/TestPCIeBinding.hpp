@@ -19,7 +19,7 @@ class TestPCIeBinding : public PCIeBinding
     static constexpr size_t packetSize = 4096;
 
   public:
-    using PrvDataType = mctp_astpcie_pkt_private;
+    using PrvDataType = mctp_nupcie_pkt_private;
     using Backdoor = BindingBackdoor<PrvDataType>;
 
     template <typename Payload>

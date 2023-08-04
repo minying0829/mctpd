@@ -135,7 +135,7 @@ target_link_libraries(
   boost_coroutine)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-install(FILES ${SERVICE_FILES} DESTINATION /lib/systemd/system/)
+install(FILES ${SERVICE_FILES} DESTINATION /usr/lib/systemd/system/)
 install(FILES ${CONFIG_FILES} DESTINATION /usr/share/mctp/)
 
 if(${MCTPD_BUILD_UT})

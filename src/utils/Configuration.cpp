@@ -152,6 +152,7 @@ static std::optional<SMBusConfiguration> getSMBusConfiguration(const T& map)
     uint64_t reqToRespTimeMs = 0;
     uint64_t reqRetryCount = 0;
     uint64_t scanInterval = 0;
+    uint64_t getRoutingInterval = 0;
     std::vector<uint64_t> supportedEndpointSlaveAddress;
     std::vector<uint64_t> ignoredEndpintSlaveAddress;
 
@@ -201,6 +202,12 @@ static std::optional<SMBusConfiguration> getSMBusConfiguration(const T& map)
     }
 
     const auto mode = stringToBindingModeMap.at(role);
+    if (mode != mctp_server::BindingModeTypes::BusOwner &&
+        !getField(map, "GetRoutingInterval", getRoutingInterval))
+    {
+        getRoutingInterval = 5;
+    }
+
     if (mode == mctp_server::BindingModeTypes::BusOwner &&
         !getField(map, "EIDPool", eidPool) &&
         !getField(map, "eid-pool", eidPool))
@@ -254,6 +261,10 @@ static std::optional<SMBusConfiguration> getSMBusConfiguration(const T& map)
     config.reqRetryCount = static_cast<uint8_t>(reqRetryCount);
     config.scanInterval = scanInterval;
     config.allowedBuses = getAllowedBuses(map);
+    if (mode != mctp_server::BindingModeTypes::BusOwner)
+    {
+        config.routingIntervalSec = static_cast<uint8_t>(getRoutingInterval);
+    }
 
     return config;
 }

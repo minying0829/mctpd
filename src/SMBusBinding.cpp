@@ -965,7 +965,8 @@ void SMBusBinding::initEndpointDiscovery(boost::asio::yield_context& yield)
         }
     }
 
-    if (registerDeviceMap.empty())
+    // Add to check root device
+    if (registerDeviceMap.empty() && rootDeviceMap.empty())
     {
         phosphor::logging::log<phosphor::logging::level::DEBUG>(
             "No device found");
@@ -1021,10 +1022,6 @@ bool SMBusBinding::handleSetEndpointId(mctp_eid_t destEid, void* bindingPrivate,
         busOwnerSlaveAddr = smbusPrivate->slave_addr;
         busOwnerFd = smbusPrivate->fd;
 
-        if (bindingModeType != mctp_server::BindingModeTypes::BusOwner)
-        {
-            updateRoutingTable();
-        }
     }
 
     return true;
@@ -1168,6 +1165,10 @@ void SMBusBinding::updateDiscoveredFlag(DiscoveryFlags flag)
 {
     discoveredFlag = flag;
     smbusInterface->set_property("DiscoveredFlag", convertToString(flag));
+
+    if (DiscoveryFlags::kDiscovered == flag) {
+        updateRoutingTable();
+    }
 }
 
 void SMBusBinding::addUnknownEIDToDeviceTable(const mctp_eid_t eid,

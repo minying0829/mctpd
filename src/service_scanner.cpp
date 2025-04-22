@@ -262,7 +262,7 @@ void MCTPServiceScanner::scan()
         }
     };
 
-    boost::asio::spawn(connection->get_io_context(), scanTask);
+    boost::asio::spawn(connection->get_io_context(), scanTask, boost::asio::detached);
 }
 
 bool MCTPServiceScanner::isAllowedBus(const std::string& bus,
@@ -373,7 +373,7 @@ void MCTPServiceScanner::onHotPluggedEid(sdbusplus::message::message& message)
                          e.what())
                             .c_str());
                 }
-            });
+            }, boost::asio::detached);
     }
     catch (const std::exception& e)
     {
@@ -451,7 +451,7 @@ void MCTPServiceScanner::onEidRemoved(sdbusplus::message::message& message)
                          e.what())
                             .c_str());
                 }
-            });
+            }, boost::asio::detached);
     }
     catch (const std::exception& e)
     {

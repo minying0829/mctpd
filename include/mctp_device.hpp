@@ -21,6 +21,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
+#include <boost/asio/detached.hpp>
 
 enum class PacketState : uint8_t
 {

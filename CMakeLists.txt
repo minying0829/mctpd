@@ -6,7 +6,7 @@ project(mctpd CXX)
 option(BUILD_STANDALONE "Use outside of YOCTO depedencies system" OFF)
 
 set(BUILD_SHARED_LIBRARIES OFF)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-DMCTP_ASTPCIE_RESPONSE_WA)
@@ -132,7 +132,8 @@ target_link_libraries(
   mctp_intel
   udev
   i2c
-  boost_coroutine)
+  boost_coroutine
+  boost_context)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(FILES ${SERVICE_FILES} DESTINATION /usr/lib/systemd/system/)
@@ -168,7 +169,8 @@ if(${MCTPD_BUILD_UT})
     pthread
     phosphor_dbus
     i2c
-    boost_coroutine)
+    boost_coroutine
+    boost_context)
 
   add_test(test-mctpd test-mctpd "--gtest_output=xml:test-mctpd.xml")
   install(TARGETS test-mctpd DESTINATION bin)

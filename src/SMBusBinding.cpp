@@ -466,7 +466,7 @@ void SMBusBinding::scanDevices()
             }
             scanDevices();
         });
-    });
+    }, boost::asio::detached);
 }
 
 void SMBusBinding::restoreMuxIdleMode()
@@ -1327,7 +1327,7 @@ void SMBusBinding::updateRoutingTable()
             smbusDeviceTable = smbusDeviceTableTmp;
         }
         entryHdlCounter++;
-    });
+    }, boost::asio::detached);
 
     smbusRoutingTableTimer->expires_after(
         std::chrono::seconds(smbusRoutingInterval));

@@ -73,7 +73,7 @@ void PCIeBinding::endpointDiscoveryFlow()
             phosphor::logging::log<phosphor::logging::level::ERR>(
                 "Discovery Notify failed");
         }
-    });
+    }, boost::asio::detached);
 }
 
 mctp_server::BindingModeTypes
@@ -309,7 +309,7 @@ void PCIeBinding::updateRoutingTable()
             processRoutingTableChanges(routingTableTmp, yield, prvData);
             routingTable = routingTableTmp;
         }
-    });
+    }, boost::asio::detached);
 }
 
 void PCIeBinding::populateDeviceProperties(
